@@ -6,10 +6,6 @@ on:
     tags: ["v*"]
   workflow_dispatch: {}
 
-defaults:
-  run:
-    working-directory: yt-converter
-
 jobs:
   build:
     strategy:
@@ -23,6 +19,9 @@ jobs:
             artifact_name: Tubeforge-Linux
 
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: yt-converter
 
     steps:
       - uses: actions/checkout@v4
