@@ -1,17 +1,14 @@
 name: Build Tubeforge
 
-# Builds a standalone executable for Windows, macOS, and Linux on every push
-# to main and on version tags. Download the results from the "Actions" tab
-# of your repo -> the workflow run -> "Artifacts" section at the bottom.
-#
-# To cut a proper release with downloadable files on the repo's Releases
-# page, push a tag like: git tag v1.0.0 && git push origin v1.0.0
-
 on:
   push:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: yt-converter
 
 jobs:
   build:
@@ -48,8 +45,8 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: |
-            dist/Tubeforge.exe
-            dist/Tubeforge
+            yt-converter/dist/Tubeforge.exe
+            yt-converter/dist/Tubeforge
           if-no-files-found: ignore
 
       - name: Upload artifact (macOS)
@@ -57,12 +54,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: dist/Tubeforge.app
+          path: yt-converter/dist/Tubeforge.app
           if-no-files-found: ignore
 
   release:
-    # Only runs when you push a version tag (e.g. v1.0.0) — zips each build
-    # and attaches them to a GitHub Release so people can just click-download.
     if: startsWith(github.ref, 'refs/tags/v')
     needs: build
     runs-on: ubuntu-latest
