@@ -17,7 +17,7 @@ from typing import Optional
 
 import yt_dlp
 
-from ffmpeg_utils import ffmpeg_dir
+from ffmpeg_utils import find_ffmpeg
 
 # ---------------------------------------------------------------------------
 # Options
@@ -153,7 +153,7 @@ def _build_ydl_opts(settings: DownloadSettings, event_q: "queue.Queue[ProgressEv
 
     common = {
         "outtmpl": outtmpl,
-        "ffmpeg_location": settings.ffmpeg_location or ffmpeg_dir(),
+        "ffmpeg_location": settings.ffmpeg_location or find_ffmpeg(),
         "progress_hooks": [progress_hook],
         "postprocessor_hooks": [postprocessor_hook],
         "noplaylist": True,
