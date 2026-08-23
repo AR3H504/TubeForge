@@ -1,0 +1,85 @@
+name: Build Tubeforge
+
+# Builds a standalone executable for Windows, macOS, and Linux on every push
+# to main and on version tags. Download the results from the "Actions" tab
+# of your repo -> the workflow run -> "Artifacts" section at the bottom.
+#
+# To cut a proper release with downloadable files on the repo's Releases
+# page, push a tag like: git tag v1.0.0 && git push origin v1.0.0
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact_name: Tubeforge-Windows
+          - os: macos-latest
+            artifact_name: Tubeforge-macOS
+          - os: ubuntu-latest
+            artifact_name: Tubeforge-Linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build executable
+        run: python build.py
+
+      - name: Upload artifact (Windows/Linux)
+        if: matrix.os != 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            dist/Tubeforge.exe
+            dist/Tubeforge
+          if-no-files-found: ignore
+
+      - name: Upload artifact (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/Tubeforge.app
+          if-no-files-found: ignore
+
+  release:
+    # Only runs when you push a version tag (e.g. v1.0.0) — zips each build
+    # and attaches them to a GitHub Release so people can just click-download.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Zip artifacts
+        run: |
+          cd artifacts
+          for d in */; do
+            name="${d%/}"
+            zip -r "../${name}.zip" "$name"
+          done
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"
