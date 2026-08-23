@@ -13,8 +13,10 @@ jobs:
         include:
           - os: windows-latest
             artifact_name: Tubeforge-Windows
-          - os: macos-latest
-            artifact_name: Tubeforge-macOS
+          - os: macos-13
+            artifact_name: Tubeforge-macOS-Intel
+          - os: macos-14
+            artifact_name: Tubeforge-macOS-AppleSilicon
           - os: ubuntu-latest
             artifact_name: Tubeforge-Linux
 
@@ -39,11 +41,11 @@ jobs:
         run: python build.py
 
       - name: Zip macOS app bundle (preserves .app structure)
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: ditto -c -k --sequesterRsrc --keepParent dist/Tubeforge.app Tubeforge-macOS.zip
 
       - name: Upload artifact (Windows/Linux)
-        if: matrix.os != 'macos-latest'
+        if: runner.os != 'macOS'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -53,7 +55,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload artifact (macOS)
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
