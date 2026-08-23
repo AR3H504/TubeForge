@@ -38,6 +38,10 @@ jobs:
       - name: Build executable
         run: python build.py
 
+      - name: Zip macOS app bundle (preserves .app structure)
+        if: matrix.os == 'macos-latest'
+        run: ditto -c -k --sequesterRsrc --keepParent dist/Tubeforge.app Tubeforge-macOS.zip
+
       - name: Upload artifact (Windows/Linux)
         if: matrix.os != 'macos-latest'
         uses: actions/upload-artifact@v4
@@ -53,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: yt-converter/dist/Tubeforge.app
+          path: yt-converter/Tubeforge-macOS.zip
           if-no-files-found: ignore
 
   release:
@@ -65,12 +69,18 @@ jobs:
         with:
           path: artifacts
 
-      - name: Zip artifacts
+      - name: Package artifacts
         run: |
           cd artifacts
           for d in */; do
             name="${d%/}"
-            zip -r "../${name}.zip" "$name"
+            zip_count=$(find "$d" -maxdepth 1 -name "*.zip" | wc -l)
+            total_count=$(find "$d" -maxdepth 1 -type f | wc -l)
+            if [ "$zip_count" -eq 1 ] && [ "$total_count" -eq 1 ]; then
+              cp "$d"/*.zip "../${name}.zip"
+            else
+              zip -r "../${name}.zip" "$name"
+            fi
           done
 
       - name: Create release
