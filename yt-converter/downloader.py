@@ -185,6 +185,9 @@ def _build_ydl_opts(settings: DownloadSettings, event_q: "queue.Queue[ProgressEv
                 {"key": "FFmpegVideoConvertor", "preferedformat": "mp4"},
                 {"key": "FFmpegMetadata"},
             ],
+            "postprocessor_args": {
+                "default": ["-c:v", "copy", "-c:a", "aac", "-b:a", "192k"],
+            },
         })
 
     return common
